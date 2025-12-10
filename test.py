@@ -1,14 +1,18 @@
+from bs4 import BeautifulSoup
 import requests
 
 URL = "https://saatchi.com"
+headers = {"User-Agent": "Mozilla/5.0"}
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-}
+r = requests.get(URL, headers=headers, timeout=30)
+soup = BeautifulSoup(r.text, "html.parser")
 
-try:
-    r = requests.get(URL, headers=headers, timeout=30)
-    print("Status code:", r.status_code)
-    print("First 200 chars of page:\n", r.text[:200])
-except Exception as e:
-    print("Error:", e)
+block = soup.find("div", class_="w-100 float-left d-md-none latest-carat-price")
+if block:
+    span = block.find("span", class_="text-bold")
+    if span:
+        print("Gold price:", span.text.strip())
+    else:
+        print("Span not found")
+else:
+    print("Div not found")
