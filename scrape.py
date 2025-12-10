@@ -1,22 +1,26 @@
 import requests
-import csv
-from datetime import datetime
 from bs4 import BeautifulSoup
 
-URL = "https://www.saatchi.com/gold"   # آدرس دقیق صفحه نرخ طلا را باید جایگزین کنیم
+URL = "https://saatchi.com"
 
 def fetch_price():
-    r = requests.get(URL, timeout=10)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome/114.0 Safari/537.36"
+    }
+
+    r = requests.get(URL, headers=headers, timeout=25)  # زمان را بیشتر کن
+    r.raise_for_status()
+
     soup = BeautifulSoup(r.text, "html.parser")
 
-    # این قسمت نیاز به دقت دارد چون ساختار ساعتچی ثابت نیست
-    price_tag = soup.select_one(".price")  # باید بهت کمک کنم عنصر دقیق را پیدا کنیم
-    price = price_tag.text.strip()
+    block = soup.find("div", class_="latest-carat-price")
+    if not block:
+        raise ValueError("DIV for price not found")
 
-    return price
+    span = block.find("span", class_="text-bold")
+    if not span:
+        raise ValueError("SPAN for price not found")
 
-price = fetch_price()
-
-with open("prices.csv", "a", newline="", encoding="utf-8") as f:
-    writer = csv.writer(f)
-    writer.writerow([datetime.now(), price])
+    price_text = span.get_text(strip=True)
+    return price_text
